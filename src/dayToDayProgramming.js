@@ -1,34 +1,40 @@
 const getPosts = async (requestingUserId, postIds) => {
-  const postFeed = [];
+  if (requestingUserId && postIds) {
+    try {
+      const postFeed = [];
 
-  for (let postId of postIds) {
-    const currentPost = await getPostById(postId);
-    let Post;
-    if (currentPost) {
-      const postOwner = await getPostOwner(postId);
-      const postOwnerId = postOwner.id
-      const User = {
-        id: postOwnerId,
-        username: postOwner.username,
-        full_name: postOwner.full_name,
-        profile_picture: postOwner.profile_picture,
-        followed: await isPostOwnerFollowedByRequestingUser(requestingUserId, postOwnerId)
+      for (let postId of postIds) {
+        const currentPost = await getPostById(postId);
+        let Post;
+        if (currentPost) {
+          const postOwner = await getPostOwner(postId);
+          const postOwnerId = postOwner.id
+          const User = {
+            id: postOwnerId,
+            username: postOwner.username,
+            full_name: postOwner.full_name,
+            profile_picture: postOwner.profile_picture,
+            followed: await isPostOwnerFollowedByRequestingUser(requestingUserId, postOwnerId)
+          }
+
+          Post = {
+            id: postId,
+            description: currentPost.description,
+            owner: User,
+            image: currentPost.image,
+            created_at: currentPost.created_at,
+            liked: await isPostLikedByRequestingUser(postId, requestingUserId)
+          }
+        }
+
+        postFeed.push(Post);
       }
 
-      Post = {
-        id: postId,
-        description: currentPost.description,
-        owner: User,
-        image: currentPost.image,
-        created_at: currentPost.created_at,
-        liked: await isPostLikedByRequestingUser(postId, requestingUserId)
-      }
+      return postFeed;
+    } catch (error) {
+      return error;
     }
-
-    postFeed.push(Post);
   }
-
-  return postFeed;
 }
 
 const isPostOwnerFollowedByRequestingUser = async (requestingUserId, postOwnerId) => {
